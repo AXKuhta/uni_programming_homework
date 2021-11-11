@@ -60,8 +60,7 @@ void draw(char* src, int src_x, int src_y) {
 }
 
 // Попытаться обнаружить круг
-void detect(char* src, int src_x, int src_y) {
-	int treshold = '1';
+void detect(char* src, int src_x, int src_y, int treshold) {
 	int avg_x = 0;
 	int avg_y = 0;
 	int events = 0;
@@ -127,7 +126,7 @@ int main() {
 
 	for (int i = 0; i < 10; i++) {
 		draw(summary, dimensions, dimensions);
-		detect(summary, dimensions, dimensions);
+		detect(summary, dimensions, dimensions, '0' + i);
 
 		summary = summarize(summary, dimensions, dimensions);
 		dimensions = dimensions / 2;
