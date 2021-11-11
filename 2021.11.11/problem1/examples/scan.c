@@ -6,8 +6,6 @@
 #define IMAGE_Y 400
 #define IMAGE_SIZE IMAGE_X*IMAGE_Y
 
-char image[IMAGE_SIZE];
-
 // Уменьшить в два раза
 // Блоки 2x2 станут одним пикселем
 // Кружочки с радиусом = 1 будут утеряны, но я не думаю что их вообще можно было назвать кружочками в этом случае
@@ -18,10 +16,7 @@ char* summarize(char* src, int src_x, int src_y) {
 
 	char* dst = malloc(dst_x*dst_y);
 
-	// Смешной трюк
-	// Можно брать и инкрементить любые ячейки вплоть до 10 раз
-	// Внутри останется правильный код ASCII цифры
-	memset(dst, '0', dst_x*dst_y);
+	memset(dst, 0, dst_x*dst_y);
 
 	char get(int x, int y) { return src[y*src_x + x]; }
 	void inc(int x, int y, char value) { (void) value; dst[y*dst_x + x] = dst[y*dst_x + x] + value; }
@@ -33,7 +28,7 @@ char* summarize(char* src, int src_x, int src_y) {
 
 			char value = get(x, y);
 
-			inc(tgt_x, tgt_y, value - '0');
+			inc(tgt_x, tgt_y, value);
 		}
 	}
 	
@@ -42,13 +37,24 @@ char* summarize(char* src, int src_x, int src_y) {
 
 // Нарисовать
 void draw(char* src, int src_x, int src_y) {
+	char* LUT[] = {" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!"};
+
 	char get(int x, int y) { return src[y*src_x + x]; }
 
-	for (int y = 0; y < src_x; y++) {
-		for (int x = 0; x < src_y; x++) {
+	for (int y = 0; y < src_y; y++) {
+		for (int x = 0; x < src_x; x++) {
 			int value = get(x, y);
 
-			write(1, &value, 1);
+			// Не думал, что эта проверка понадобится, но она понадобилась
+			// Без неё будут вылеты
+			// Эх, надо было использовать uint32_t
+			if (value < 0)
+				value = 10;
+
+			if (value > 10)
+				value = 10;
+
+			write(1, LUT[value], 1);
 		}
 
 		write(1, "\n", 1);
@@ -105,20 +111,25 @@ void detect(char* src, int src_x, int src_y, int treshold) {
 }
 
 int main() {
+	char* image = malloc(IMAGE_SIZE);
 
 	// Читать с нулевого дескриптора -- это stdin
 	// Читать в image[i] по одному байту
 	// Пропускать пробелы
 	for (int i = 0; i < IMAGE_SIZE; i++) {
-		char temp;
+		char value;
+		char space;
 
-		// Прочитать цифру
-		read(0, image + i, 1);
+		// Прочитать ASCII цифру
+		read(0, &value, 1);
+
+		// Записать как простую цифру
+		image[i] = value - '0';
 
 		// Прочитать пробел
-		read(0, &temp, 1); 	// Предупреждение: нельзя просто передать этой функции NULL чтобы она пропустила данные
-							// Она просто ничего не прочитает
-							// Временная переменная обязательна
+		read(0, &space, 1); 	// Предупреждение: нельзя просто передать этой функции NULL чтобы она пропустила данные
+								// Она просто ничего не прочитает
+								// Временная переменная обязательна
 	}
 
 	char* summary = image;
@@ -126,7 +137,7 @@ int main() {
 
 	for (int i = 0; i < 10; i++) {
 		draw(summary, dimensions, dimensions);
-		detect(summary, dimensions, dimensions, '0' + i);
+		detect(summary, dimensions, dimensions, i);
 
 		summary = summarize(summary, dimensions, dimensions);
 		dimensions = dimensions / 2;
