@@ -47,7 +47,7 @@ char* summarize(char* src, int src_x, int src_y) {
 
 // Нарисовать
 void draw(char* src, int src_x, int src_y) {
-	char* LUT[] = {" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!"};
+	const char* LUT[] = {" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!"};
 
 	for (int y = 0; y < src_y; y++) {
 		for (int x = 0; x < src_x; x++) {
