@@ -103,8 +103,11 @@ void detect(char* src, int src_x, int src_y, int threshold) {
 			}
 		}
 
-		// Напечатать X, Y и R
-		printf("%d %d %d\n", avg_x, avg_y, radius);
+		// Костыли
+		int mult = threshold + 1;
+
+		// Напечатать X, Y и R (С костылями)
+		printf("%d %d %d\n", (avg_x + threshold) * mult, (avg_y + threshold) * mult, radius * mult);
 
 	} else {
 		printf("No detection events!\n");
@@ -141,7 +144,7 @@ int main() {
 	}
 	
 
-#define DETAILED_OUTPUT
+//#define DETAILED_OUTPUT
 	
 #ifdef DETAILED_OUTPUT
 	// Детальный вывод
@@ -157,7 +160,8 @@ int main() {
 	}
 #else
 	// Упрощённый вывод
-	detect(image, 400, 400, 0);
+	image = summarize(image, 400, 400);
+	detect(image, 200, 200, 1);
 #endif
 
 }
