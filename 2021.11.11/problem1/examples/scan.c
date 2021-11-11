@@ -113,22 +113,33 @@ void detect(char* src, int src_x, int src_y, int threshold) {
 
 int main() {
 	char* image = malloc(IMAGE_SIZE);
+	int i = 0;
 
 	// Читать с нулевого дескриптора -- это stdin
-	//
-	// Читать по два байта:
-	// Верхний байт: пробел или \n
-	// Нижний байт: цифра
-	//
-	// Записывать в image[i] только нижний бит от цифры
-	for (int i = 0; i < IMAGE_SIZE; i++) {
-		unsigned short value;
+	// Этот цикл -- самая медленная часть во всей программе
+	while (i < IMAGE_SIZE) {
+		char value;
 
-		read(0, &value, 2);
+		// Прочитать байт
+		read(0, &value, 1);
 
-		image[i] = value & 1;
+		// Пробелы не нужны
+		if (value == ' ')
+			continue;
+
+		// \n не нужны
+		if (value == '\n')
+			continue;
+
+		// \r не нужны
+		if (value == '\r')
+			continue;
+
+		// Сохранить значение
+		image[i] = value - '0';
+		i++;
 	}
-
+	
 
 #define DETAILED_OUTPUT
 	
