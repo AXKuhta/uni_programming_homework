@@ -129,6 +129,11 @@ int main() {
 		image[i] = value & 1;
 	}
 
+
+#define DETAILED_OUTPUT
+	
+#ifdef DETAILED_OUTPUT
+	// Детальный вывод
 	char* summary = image;
 	int dimensions = 400;
 
@@ -139,6 +144,10 @@ int main() {
 		summary = summarize(summary, dimensions, dimensions);
 		dimensions = dimensions / 2;
 	}
+#else
+	// Упрощённый вывод
+	detect(image, 400, 400, 0);
+#endif
 
 }
 
