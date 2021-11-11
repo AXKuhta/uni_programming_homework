@@ -1,6 +1,18 @@
 #include <stdio.h>
-#include <unistd.h> // read()
 #include <stdlib.h> // malloc()
+
+#ifdef _MSC_VER
+    #include <memory.h> // memset()
+    #include <io.h> // read()
+
+    #define read _read
+    #define write _write
+#else
+    #include <unistd.h> // read()
+#endif
+
+#define get(x, y) src[y*src_x + x]
+#define inc(x, y, value) dst[y*dst_x + x] = dst[y*dst_x + x] + value
 
 #define IMAGE_X 400
 #define IMAGE_Y 400
@@ -14,12 +26,9 @@ char* summarize(char* src, int src_x, int src_y) {
 	int dst_x = src_x / 2;
 	int dst_y = src_y / 2;
 
-	char* dst = malloc(dst_x*dst_y);
+	char* dst = (char*)malloc(dst_x*dst_y);
 
 	memset(dst, 0, dst_x*dst_y);
-
-	char get(int x, int y) { return src[y*src_x + x]; }
-	void inc(int x, int y, char value) { (void) value; dst[y*dst_x + x] = dst[y*dst_x + x] + value; }
 
 	for (int y = 0; y < src_y; y++) {
 		for (int x = 0; x < src_x; x++) {
@@ -38,8 +47,6 @@ char* summarize(char* src, int src_x, int src_y) {
 // Нарисовать
 void draw(char* src, int src_x, int src_y) {
 	char* LUT[] = {" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!"};
-
-	char get(int x, int y) { return src[y*src_x + x]; }
 
 	for (int y = 0; y < src_y; y++) {
 		for (int x = 0; x < src_x; x++) {
@@ -70,8 +77,6 @@ void detect(char* src, int src_x, int src_y, int threshold) {
 	int avg_x = 0;
 	int avg_y = 0;
 	int events = 0;
-
-	char get(int x, int y) { return src[y*src_x + x]; }
 
 	// Искать пиксели, превышающие threshold
 	for (int y = 0; y < src_y; y++) {
@@ -115,7 +120,7 @@ void detect(char* src, int src_x, int src_y, int threshold) {
 }
 
 int main() {
-	char* image = malloc(IMAGE_SIZE);
+	char* image = (char*)malloc(IMAGE_SIZE);
 	int i = 0;
 
 	// Читать с нулевого дескриптора -- это stdin
