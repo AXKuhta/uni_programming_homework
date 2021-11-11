@@ -9,6 +9,9 @@
 char image[IMAGE_SIZE];
 
 // Уменьшить в два раза
+// Блоки 2x2 станут одним пикселем
+// Кружочки с радиусом = 1 будут утеряны, но я не думаю что их вообще можно было назвать кружочками в этом случае
+// В теории это уменьшение может улучшить устойчивость к шуму, на практике разницы в результатах нет
 char* summarize(char* src, int src_x, int src_y) {
 	int dst_x = src_x / 2;
 	int dst_y = src_y / 2;
@@ -33,23 +36,17 @@ char* summarize(char* src, int src_x, int src_y) {
 			inc(tgt_x, tgt_y, value - '0');
 		}
 	}
+	
+	return dst;
+}
 
-	char dget(int x, int y) { return dst[y*dst_x + x]; }
+// Нарисовать
+void draw(char* src, int src_x, int src_y) {
+	char get(int x, int y) { return src[y*src_x + x]; }
 
-	int avg_x = 0;
-	int avg_y = 0;
-	int events = 0;
-
-	// Нарисовать
-	for (int y = 0; y < dst_x; y++) {
-		for (int x = 0; x < dst_y; x++) {
-			int value = dget(x, y);
-
-			if (value > '1') {
-				avg_x += x;
-				avg_y += y;
-				events++;
-			}
+	for (int y = 0; y < src_x; y++) {
+		for (int x = 0; x < src_y; x++) {
+			int value = get(x, y);
 
 			write(1, &value, 1);
 		}
@@ -60,6 +57,27 @@ char* summarize(char* src, int src_x, int src_y) {
 	write(1, "\n", 1);
 	write(1, "\n", 1);
 	write(1, "\n", 1);
+}
+
+// Попытаться обнаружить круг
+void detect(char* src, int src_x, int src_y) {
+	int avg_x = 0;
+	int avg_y = 0;
+	int events = 0;
+
+	char get(int x, int y) { return src[y*src_x + x]; }
+
+	for (int y = 0; y < src_y; y++) {
+		for (int x = 0; x < src_x; x++) {
+			int value = get(x, y);
+
+			if (value > '1') {
+				avg_x += x;
+				avg_y += y;
+				events++;
+			}
+		}
+	}
 
 	if (events > 0) {
 		avg_x = avg_x / events;
@@ -69,14 +87,7 @@ char* summarize(char* src, int src_x, int src_y) {
 	} else {
 		printf("No detection events!\n");
 	}
-	
-	return dst;
 }
-
-
-// write(1, "a", 1);
-// write(1, "\n", 1);
-
 
 int main() {
 
@@ -99,6 +110,9 @@ int main() {
 	int dimensions = 400;
 
 	for (int i = 0; i < 10; i++) {
+		draw(summary, dimensions, dimensions);
+		detect(summary, dimensions, dimensions);
+
 		summary = summarize(summary, dimensions, dimensions);
 		dimensions = dimensions / 2;
 	}
