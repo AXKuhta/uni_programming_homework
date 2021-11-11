@@ -66,18 +66,19 @@ void draw(char* src, int src_x, int src_y) {
 }
 
 // Попытаться обнаружить круг
-void detect(char* src, int src_x, int src_y, int treshold) {
+void detect(char* src, int src_x, int src_y, int threshold) {
 	int avg_x = 0;
 	int avg_y = 0;
 	int events = 0;
 
 	char get(int x, int y) { return src[y*src_x + x]; }
 
+	// Искать пиксели, превышающие threshold
 	for (int y = 0; y < src_y; y++) {
 		for (int x = 0; x < src_x; x++) {
 			int value = get(x, y);
 
-			if (value > treshold) {
+			if (value > threshold) {
 				avg_x += x;
 				avg_y += y;
 				events++;
@@ -85,11 +86,10 @@ void detect(char* src, int src_x, int src_y, int treshold) {
 		}
 	}
 
+	// Если нашёлся хотя бы один (Должно найтись очень много), посчитать средний центр
 	if (events > 0) {
 		avg_x = avg_x / events;
 		avg_y = avg_y / events;
-
-		printf("Avg X Y: %d %d\n", avg_x, avg_y);
 
 		// Попробовать найти радиус, двигаясь по горизонтали от центра
 		int radius = 0;
@@ -97,13 +97,14 @@ void detect(char* src, int src_x, int src_y, int treshold) {
 		for (int x = avg_x; x < src_x; x++) {
 			int value = get(x, avg_y);
 
-			if (value > treshold) {
+			if (value > threshold) {
 				radius = x - avg_x;
 				break;
 			}
 		}
 
-		printf("R: %d\n", radius);
+		// Напечатать X, Y и R
+		printf("%d %d %d\n", avg_x, avg_y, radius);
 
 	} else {
 		printf("No detection events!\n");
