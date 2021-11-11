@@ -36,10 +36,21 @@ char* summarize(char* src, int src_x, int src_y) {
 
 	char dget(int x, int y) { return dst[y*dst_x + x]; }
 
+	int avg_x = 0;
+	int avg_y = 0;
+	int events = 0;
+
 	// Нарисовать
 	for (int y = 0; y < dst_x; y++) {
 		for (int x = 0; x < dst_y; x++) {
 			int value = dget(x, y);
+
+			if (value > '1') {
+				avg_x += x;
+				avg_y += y;
+				events++;
+			}
+
 			write(1, &value, 1);
 		}
 
@@ -50,6 +61,15 @@ char* summarize(char* src, int src_x, int src_y) {
 	write(1, "\n", 1);
 	write(1, "\n", 1);
 
+	if (events > 0) {
+		avg_x = avg_x / events;
+		avg_y = avg_y / events;
+
+		printf("Avg X Y: %d %d\n", avg_x, avg_y);
+	} else {
+		printf("No detection events!\n");
+	}
+	
 	return dst;
 }
 
