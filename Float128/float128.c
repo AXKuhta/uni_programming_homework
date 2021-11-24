@@ -104,7 +104,7 @@ float load_float32(int number) {
 
 	int_view[0] = number & MANTISSA_MASK;
 	int_view[0] += exp << 23;
-
+	int_view[0] += sign << 31;
 
 
 	// Перенести результат в переменную и высвободить память
@@ -115,5 +115,5 @@ float load_float32(int number) {
 }
 
 int main() {
-	printf("Load float: %f\n", load_float32(6));
+	printf("Load float: %f\n", load_float32(-6));
 }
