@@ -98,18 +98,16 @@ float load_float32(int number) {
 		number = number << 1;
 		lz++;
 	}
-
-	// Записать целую часть
-	int_view[0] = number & MANTISSA_MASK;
-
 	
 	// Используя количество ведущих нулей, подсчитать экспоненту
 	int exp = (22 - lz) + 0x80;
 
-	// Загрузить экспоненту
+	int_view[0] = number & MANTISSA_MASK;
 	int_view[0] += exp << 23;
 
 
+
+	// Перенести результат в переменную и высвободить память
 	float val = float_view[0];
 	free(memory);
 
