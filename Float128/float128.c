@@ -56,7 +56,6 @@
 //
 
 float load_float32(int number) {
-	int temp = 0;
 	int sign = 0;
 
 	// Сохранить знак
@@ -72,14 +71,25 @@ float load_float32(int number) {
 	#define EXPONENT_MASK	0b01111111100000000000000000000000
 	#define MANTISSA_MASK	0b00000000011111111111111111111111
 
+	// Использовать настоящую память для всех операций
+	// Это поможет избежать предупреждений про type punning
+	void* memory = malloc(4);
+
+	float* float_view = memory;
+	int* int_view = memory;
+
+	// Очистить
+	int_view[0] = 0;
+
+
 	// Вставить мантиссу и выполнить нормализацию
-	temp = number;
+	int_view[0] = number;
 
 	// Ведущие нули
 	int lz = 0;
 
-	while (!(temp & EXPONENT_MASK)) {
-		temp = temp << 1;
+	while (!(int_view[0] & EXPONENT_MASK)) {
+		int_view[0] = int_view[0] << 1;
 		lz++;
 	}
 
@@ -92,9 +102,13 @@ float load_float32(int number) {
 	// 0xFF		 Infinity
 	//
 	// Загрузить положительную экспоненту
-	temp += (0x80 | lo_exp) << 23;
+	int_view[0] += (0x80 | lo_exp) << 23;
 
-	return *(float*)&temp;
+	float val = float_view[0];
+
+	free(memory);
+
+	return val;
 }
 
 int main() {
