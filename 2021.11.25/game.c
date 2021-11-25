@@ -2,15 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-void print_arr(int* base, int len) {
-	printf("{");
-
-	for (int i = 0; i < len; i++)
-		printf("%d ", base[i]);
-	
-	printf("}\n");
-}
-
 int main() {
 	time_t now = time(0);
 	
@@ -31,7 +22,8 @@ int main() {
 		pool[i_pool] = pool[avail - 1];
 		truth[value] = i;
 
-		printf("%d\n", value);
+		// Отладочный вывод сгенерированного числа
+		// printf("%d\n", value);
 
 		avail--;
 	}
@@ -43,11 +35,18 @@ int main() {
 	while (1) {
 		int guess[] = {0, 0, 0, 0};
 
-		printf("Take a guess (4 digit number): ");
+		printf("Take a guess (4 distinct digits): ");
 		scanf("%1d%1d%1d%1d", guess + 0, guess + 1, guess + 2, guess + 3);
 
-		//print_arr(guess, 4);
+		// Проверка на уникальность каждой цифры
+		int distinctness[] = {0,0,0,0,0,0,0,0,0,0};
 
+		if (++distinctness[guess[0]] > 1) { printf("Bad input\n"); continue; };
+		if (++distinctness[guess[1]] > 1) { printf("Bad input\n"); continue; };
+		if (++distinctness[guess[2]] > 1) { printf("Bad input\n"); continue; };
+		if (++distinctness[guess[3]] > 1) { printf("Bad input\n"); continue; };
+
+		// Подсчёт быков/коров
 		int bulls = 0;
 		int cows = 0;
 
