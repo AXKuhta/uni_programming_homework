@@ -19,22 +19,24 @@ int main() {
 	srand(now);
 
 
-	int pool[] = {0,1,2,3,4,5,6,7,8,9};
-	int truth[] = {0,0,0,0};
+	int pool[] = 	{0,1,2,3,4,5,6,7,8,9};
+	int truth[] = 	{0,0,0,0,0,0,0,0,0,0};
 
 	int avail = 10;
 
 	for (int i = 0; i < 4; i++) {
 		int i_pool = rand() % avail;
+		int value = pool[i_pool];
 
-		truth[i] = pool[i_pool];
 		pool[i_pool] = pool[avail - 1];
+		truth[value] = i;
+
+		printf("%d\n", value);
 
 		avail--;
 	}
 	
 	printf("I generated a number. Try to guess it!\n");
-	print_arr(truth, 4);
 
 	int guess_count = 0;
 
@@ -50,21 +52,13 @@ int main() {
 		int cows = 0;
 
 		for (int i = 0; i < 4; i++) {
+			int value = guess[i];
 
-			// Бык = полное совпадение
-			if (guess[i] == truth[i]) {
+			if (truth[value] == i) {
 				bulls++;
-				continue;
+			} else if (truth[value] > 0) {
+				cows++;
 			}
-
-			// Корова = совпадение по множеству
-			for (int j = 0; j < 4; j++) {
-				if (guess[i] == truth[j]) {
-					cows++;
-					break;
-				}
-			}
-
 		}
 
 		printf("%d bulls, %d cows\n", bulls, cows);
