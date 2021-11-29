@@ -159,6 +159,10 @@ void print_float32(float number) {
 	// Начать считать
 	av_t num = av_from_string("0");
 
+	// Но ограничить high_bit
+	if (high_bit > 23)
+		high_bit = 23;
+
 	for (int i = 0; i < high_bit; i++) {
 		if (*int_view & 1) {
 			num = ascii_add(&num, &base);
@@ -189,5 +193,5 @@ void print_float32(float number) {
 int main() {
 	printf("Load float: %f\n", load_float32(-6));
 
-	print_float32(1.25e6);
+	print_float32(1.25e8);
 }
