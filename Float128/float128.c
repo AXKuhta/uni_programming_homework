@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ascii_lib.c"
+
 //
 // Количество цифр в разных числах:
 // 2^32			10
@@ -110,6 +112,82 @@ float load_float32(int number) {
 	return val;
 }
 
+void print_float32(float number) {
+	// 1	Знак
+	// 8	Экспонента
+	// 23	Мантисса
+	#define SIGN_MASK		0b10000000000000000000000000000000
+	#define EXPONENT_MASK	0b01111111100000000000000000000000
+	#define MANTISSA_MASK	0b00000000011111111111111111111111
+
+	// Использовать настоящую память для всех операций
+	// Это поможет избежать предупреждений про type punning
+	void* memory = malloc(4);
+
+	float* float_view = memory;
+	int* int_view = memory;
+
+	// Загрузить
+	*float_view = number;
+
+
+	// Значение экспоненты указывает самый высокий установленный бит
+	int exp = (*int_view & EXPONENT_MASK) >> 23;
+
+	if (exp < 128) {
+		printf("UNIMPLEMENTED\n");
+		exit(-1);
+	}
+
+	int high_bit = exp - 128 + 1;
+	int mantissa_size = 23 - high_bit;
+
+	printf("Have %d as the highbit\n", high_bit);
+	printf("Mantissa is %d bits\n", mantissa_size);
+
+
+	// Подвести вес разряда к рабочему диапазону
+	av_t base = av_from_string("1");
+
+	for (int i = 0; i < -mantissa_size; i++)
+		base = ascii_add(&base, &base);
+
+	// Выкинуть дробную часть, если есть
+	if (mantissa_size > 0)
+		*int_view = *int_view >> mantissa_size;
+
+	// Начать считать
+	av_t num = av_from_string("0");
+
+	for (int i = 0; i < high_bit; i++) {
+		if (*int_view & 1) {
+			num = ascii_add(&num, &base);
+			printf("HI +");
+			print_av(&base);
+			printf("\n");
+		} else {
+			printf("LO\n");
+		}
+
+		base = ascii_add(&base, &base);
+		*int_view = *int_view >> 1;
+	}
+
+	// И финальный бит
+	num = ascii_add(&num, &base);
+	printf("HI +");
+	print_av(&base);
+	printf("\n");
+
+	printf("Result: ");
+	print_av(&num);
+	printf("\n");
+
+	free(memory);
+}
+
 int main() {
 	printf("Load float: %f\n", load_float32(-6));
+
+	print_float32(1.25e6);
 }
