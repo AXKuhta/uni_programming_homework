@@ -250,4 +250,5 @@ int main() {
 	print_float32(3.14159265358979323846);
 	
 	print_float32(1.5);
+	print_float32(2.0005);
 }

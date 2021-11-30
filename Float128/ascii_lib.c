@@ -45,9 +45,13 @@ av_t ascii_add(av_t* a, av_t* b) {
 	size_t size_a = (a->lsc - a->msc);
 	size_t size_b = (b->lsc - b->msc);
 
-	// Не очень оптимальное выделение памяти
-	// В худшем случае нужно max + 2
-	av_t result = av_new(size_a + size_b + 2);
+	// Сравнить размеры исходных чисел и выделить память с небольшим запасом
+	size_t max = size_a;
+
+	if (size_b > max)
+		max = size_b;
+
+	av_t result = av_new(max + 2);
 
 	char* src_a = a->lsc;
 	char* src_b = b->lsc;
@@ -121,11 +125,11 @@ av_t ascii_add(av_t* a, av_t* b) {
 		*dst = '1';
 	}
 
-	// Скрыть ведущие нули
+	// Скрыть ведущий ноль
 	// Без realloc() это испортит указатель
 	// Его больше нельзя будет освободить через free()
 	// Наиболее разумным решением будет хранить оригинальный указатель отдельно
-	while (*result.msc == '0')
+	if (*result.msc == '0')
 		result.msc++;
 
 	return result;
