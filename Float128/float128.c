@@ -147,9 +147,6 @@ void print_float32(float number) {
 	int high_bit = exp - 128 + 1;
 	int mantissa_size = 23 - high_bit;
 
-	printf("Have %d as the highbit\n", high_bit);
-	printf("Mantissa is %d bits\n", mantissa_size);
-
 	//
 	// =================
 	// Вывод целой части
@@ -177,14 +174,8 @@ void print_float32(float number) {
 		high_bit = 23;
 
 	for (int i = 0; i < high_bit; i++) {
-		if (integer & 1) {
+		if (integer & 1)
 			num = ascii_add(&num, &base);
-			printf("HI +");
-			print_av(&base);
-			printf("\n");
-		} else {
-			printf("LO\n");
-		}
 
 		base = ascii_add(&base, &base);
 		integer = integer >> 1;
@@ -192,9 +183,6 @@ void print_float32(float number) {
 
 	// И финальный бит
 	num = ascii_add(&num, &base);
-	printf("HI +");
-	print_av(&base);
-	printf("\n");
 
 	printf("Result: ");
 	print_av(&num);
@@ -243,4 +231,8 @@ int main() {
 	print_float32(5.5);
 	print_float32(512.125);
 	print_float32(1337.1337);
+
+	// Пара математических констант
+	print_float32(2.71828182845904523536);
+	print_float32(3.14159265358979323846);
 }
