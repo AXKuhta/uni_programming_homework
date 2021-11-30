@@ -139,7 +139,7 @@ void print_float32(float number) {
 	// Значение экспоненты указывает самый высокий установленный бит
 	int exp = (*int_view & EXPONENT_MASK) >> 23;
 
-	if (exp < 128) {
+	if (exp < 127) {
 		printf("UNIMPLEMENTED\n");
 		exit(-1);
 	}
@@ -235,4 +235,6 @@ int main() {
 	// Пара математических констант
 	print_float32(2.71828182845904523536);
 	print_float32(3.14159265358979323846);
+	
+	print_float32(1.5);
 }
