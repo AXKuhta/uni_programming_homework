@@ -150,16 +150,24 @@ void print_float32(float number) {
 	printf("Have %d as the highbit\n", high_bit);
 	printf("Mantissa is %d bits\n", mantissa_size);
 
+	//
+	// =================
+	// Вывод целой части
+	// =================
+	//
+
+	// Взять целую часть
+	int integer = *int_view;
+
+	// Выкинуть дробную часть, если есть
+	if (mantissa_size > 0)
+		integer = integer >> mantissa_size;
 
 	// Подвести вес разряда к рабочему диапазону
 	av_t base = av_from_string("1");
 
 	for (int i = 0; i < -mantissa_size; i++)
 		base = ascii_add(&base, &base);
-
-	// Выкинуть дробную часть, если есть
-	if (mantissa_size > 0)
-		*int_view = *int_view >> mantissa_size;
 
 	// Начать считать
 	av_t num = av_from_string("0");
@@ -169,7 +177,7 @@ void print_float32(float number) {
 		high_bit = 23;
 
 	for (int i = 0; i < high_bit; i++) {
-		if (*int_view & 1) {
+		if (integer & 1) {
 			num = ascii_add(&num, &base);
 			printf("HI +");
 			print_av(&base);
@@ -179,7 +187,7 @@ void print_float32(float number) {
 		}
 
 		base = ascii_add(&base, &base);
-		*int_view = *int_view >> 1;
+		integer = integer >> 1;
 	}
 
 	// И финальный бит
@@ -190,6 +198,39 @@ void print_float32(float number) {
 
 	printf("Result: ");
 	print_av(&num);
+
+	//
+	// ===================
+	// Вывод дробной части
+	// ===================
+	//
+
+	if (mantissa_size > 0) {
+
+		// Взять дробную часть
+		int fraction = *int_view;
+
+		// Подвести вес разряда к рабочему диапазону
+		av_t base = av_from_string("00000011920928955078125");
+
+		for (int i = 0; i < 23 - mantissa_size; i++)
+			base = ascii_add(&base, &base);
+
+		// Начать считать
+		av_t num = av_from_string("0");
+
+		for (int i = 0; i < mantissa_size; i++) {
+			if (fraction & 1)
+				num = ascii_add(&num, &base);
+
+			base = ascii_add(&base, &base);
+			fraction = fraction >> 1;
+		}
+
+		printf(".");
+		print_av(&num);
+	}
+
 	printf("\n");
 
 	free(memory);
@@ -199,4 +240,7 @@ int main() {
 	printf("Load float: %f\n", load_float32(-6));
 
 	print_float32(1.25e8);
+	print_float32(5.5);
+	print_float32(512.125);
+	print_float32(1337.1337);
 }
