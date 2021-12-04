@@ -158,11 +158,6 @@ void print_float32(float number) {
 	// Значение экспоненты указывает самый высокий установленный бит
 	int exp = (*int_view & EXPONENT_MASK) >> 23;
 
-	if (exp < 127) {
-		printf("UNIMPLEMENTED\n");
-		exit(-1);
-	}
-
 	int high_bit = exp - 128 + 1;
 	int mantissa_size = 23 - high_bit;
 
@@ -171,40 +166,43 @@ void print_float32(float number) {
 	// Вывод целой части
 	// =================
 	//
+	if (high_bit >= 0) {	
+		// Взять целую часть
+		int integer = *int_view;
 
-	// Взять целую часть
-	int integer = *int_view;
+		// Выкинуть дробную часть, если есть
+		if (mantissa_size > 0)
+			integer = integer >> mantissa_size;
 
-	// Выкинуть дробную часть, если есть
-	if (mantissa_size > 0)
-		integer = integer >> mantissa_size;
+		// Подвести вес разряда к рабочему диапазону
+		av_t base = av_from_string("1");
 
-	// Подвести вес разряда к рабочему диапазону
-	av_t base = av_from_string("1");
+		for (int i = 0; i < -mantissa_size; i++)
+			base = ascii_add(&base, &base);
 
-	for (int i = 0; i < -mantissa_size; i++)
-		base = ascii_add(&base, &base);
+		// Начать считать
+		av_t num = av_from_string("0");
 
-	// Начать считать
-	av_t num = av_from_string("0");
+		// Но ограничить high_bit
+		if (high_bit > 23)
+			high_bit = 23;
 
-	// Но ограничить high_bit
-	if (high_bit > 23)
-		high_bit = 23;
+		for (int i = 0; i < high_bit; i++) {
+			if (integer & 1)
+				num = ascii_add(&num, &base);
 
-	for (int i = 0; i < high_bit; i++) {
-		if (integer & 1)
-			num = ascii_add(&num, &base);
+			base = ascii_add(&base, &base);
+			integer = integer >> 1;
+		}
 
-		base = ascii_add(&base, &base);
-		integer = integer >> 1;
+		// И финальный бит
+		// Затем напечатать
+		num = ascii_add(&num, &base);
+
+		print_av(&num);
+	} else {
+		printf("0");
 	}
-
-	// И финальный бит
-	// Затем напечатать
-	num = ascii_add(&num, &base);
-
-	print_av(&num);
 
 	//
 	// ===================
@@ -218,13 +216,27 @@ void print_float32(float number) {
 		int fraction = *int_view;
 
 		// Подвести вес разряда к рабочему диапазону
-		av_t base = av_from_string("00000011920928955078125");
+		av_t base;
 
-		for (int i = 0; i < 23 - mantissa_size; i++)
-			base = ascii_add(&base, &base);
+		if (high_bit >= 0) {
+			base = av_from_string("00000011920928955078125");
+
+			for (int i = 0; i < 23 - mantissa_size; i++)
+				base = ascii_add(&base, &base);
+		} else {
+			base = av_from_string("00000000000000000000000000000000000000000000140129846432481707092372958328991613128026194187651577175706828388979108268586060148663818836212158203125");
+
+			for (int i = 0; i < 149 - 23 + high_bit; i++)
+				base = ascii_add(&base, &base);
+		}
+		
 
 		// Начать считать
 		av_t num = av_from_string("0");
+
+		// Но ограничить mantissa_size
+		if (mantissa_size > 23)
+			mantissa_size = 23;
 
 		for (int i = 0; i < mantissa_size; i++) {
 			if (fraction & 1)
@@ -233,6 +245,10 @@ void print_float32(float number) {
 			base = ascii_add(&base, &base);
 			fraction = fraction >> 1;
 		}
+
+		// Финальный разряд в режиме <1.0s
+		if (high_bit < 0)
+			num = ascii_add(&num, &base);
 
 		printf(".");
 		print_av(&num);
@@ -260,5 +276,7 @@ int main() {
 	print_float32(2.0005);
 	print_float32(-2.0005);
 
-	
+	print_float32(0.25);
+	print_float32(0.33);
+	print_float32(0.0001035);
 }
