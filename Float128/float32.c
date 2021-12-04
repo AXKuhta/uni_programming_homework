@@ -149,6 +149,12 @@ void print_float32(float number) {
 	*float_view = number;
 
 
+	printf("Result: ");
+
+	if (*int_view & SIGN_MASK)
+		printf("-");
+
+
 	// Значение экспоненты указывает самый высокий установленный бит
 	int exp = (*int_view & EXPONENT_MASK) >> 23;
 
@@ -195,9 +201,9 @@ void print_float32(float number) {
 	}
 
 	// И финальный бит
+	// Затем напечатать
 	num = ascii_add(&num, &base);
 
-	printf("Result: ");
 	print_av(&num);
 
 	//
@@ -250,5 +256,9 @@ int main() {
 	print_float32(3.14159265358979323846);
 	
 	print_float32(1.5);
+	print_float32(-1.5);
 	print_float32(2.0005);
+	print_float32(-2.0005);
+
+	
 }
