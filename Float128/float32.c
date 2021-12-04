@@ -247,12 +247,14 @@ void print_float32(float number) {
 		}
 
 		// Финальный разряд в режиме <1.0
-		if (high_bit < 0)
+		// За исключением числа 0.0 и других крайне маленьких чисел, которые дают exp == 0
+		if ((high_bit < 0) && exp)
 			num = ascii_add(&num, &base);
 
 		// Спрятать хвостовые нули
-		while (*num.lsc == '0')
+		if (exp) while (*num.lsc == '0') {
 			num.lsc--;
+		}
 
 		printf(".");
 		print_av(&num);
@@ -283,4 +285,7 @@ int main() {
 	print_float32(0.25);
 	print_float32(0.33);
 	print_float32(0.0001035);
+
+	print_float32(0.0);
+	print_float32(1.401298464324817e-45);
 }
