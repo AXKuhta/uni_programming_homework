@@ -246,9 +246,13 @@ void print_float32(float number) {
 			fraction = fraction >> 1;
 		}
 
-		// Финальный разряд в режиме <1.0s
+		// Финальный разряд в режиме <1.0
 		if (high_bit < 0)
 			num = ascii_add(&num, &base);
+
+		// Спрятать хвостовые нули
+		while (*num.lsc == '0')
+			num.lsc--;
 
 		printf(".");
 		print_av(&num);
