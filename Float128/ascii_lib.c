@@ -5,6 +5,20 @@
 #include <string.h>
 #include <time.h>
 
+//
+// Количество цифр в разных числах:
+// 2^32			10
+// 2^64			20
+// 2^128		39
+// 2^256		78
+// 2^512		155
+// 2^1024		309
+// 2^2048		617
+// 2^4096		1234
+//
+// Такими будут затраты памяти на представление в ASCII
+//
+
 struct ascii_vec {
 	char* lsc; // Least significant char
 	char* msc; // Most significant char
