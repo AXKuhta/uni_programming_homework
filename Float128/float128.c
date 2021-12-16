@@ -158,7 +158,7 @@ void print_float128(float128_t* src) {
 			num = ascii_add(&num, &base);
 
 		// Спрятать хвостовые нули
-		if (exp) while (*num.lsc == '0') {
+		if (exp) while (*num.lsc == '0' && num.lsc > num.msc) {
 			num.lsc--;
 		}
 
