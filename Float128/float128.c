@@ -73,16 +73,18 @@ void print_float128(float128_t* src) {
 
 
 		uint64_t slice = 0;
+		int roi = high_bit;
 
-		if (high_bit > 64) {
-			slice = src->lo;
+		if (high_bit > 48) {
+			roi = high_bit - 48;
+			slice = src->lo >> (64 - roi);
 		} else {
-			slice = src->hi >> (48 - high_bit);
+			slice = src->hi;
 		}
 
 		for (int i = 0; i < high_bit; i++) {
-			// Если собираемся просмотреть 65-й бит, то пора переключить кусок
-			if (i == 64) slice = src->hi;
+			// Переключить кусок, если необходимо
+			if (i == roi) slice = src->hi;
 
 			if (slice & 1)
 				num = ascii_add(&num, &base);
