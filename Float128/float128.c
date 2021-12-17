@@ -5,6 +5,10 @@
 
 #include "ascii_lib.c"
 
+// Печать без буферизации
+// Под Windows проблем с упорядоченностью вывода не было, а под Linux появились
+#define print(x) if (write(1, x, strlen(x))) {}
+
 //
 // Float128:
 // Знак			1 бит
@@ -36,12 +40,93 @@ uint16_t float128_get_exp(float128_t* src) {
 	return ((src->hi >> 48) & 0x7FFF);
 }
 
+// Right Hand Side Mask; Маска по правой стороне
+// Постфикс ull на нуле критически важен
+// ~ это инвертирование
+//
+// Начальный вариант: ((1ull << x) - 1)
+// Не хотел работать при x = 64
+//
+// Вернёт:
+// 0        0000
+// 1        0001
+// 2        0011
+// 3        0111
+// И т.д. до 64
+#define RHS_MASK(x) (~0ull >> (64 - x))
 
+// Сложить два Float128
+// a = a + b
+void float128_add(float128_t* src_a, float128_t* src_b) {
+	uint16_t exp_a = float128_get_exp(src_a);
+	uint16_t exp_b = float128_get_exp(src_b);
+
+	if (exp_b > exp_a) {
+		print("Not OK\n");
+		exit(-1);
+	}
+
+	// Проблема: битовые операции сломаются, если precision_delta > 64
+	// На такой случай нужна альтернативная обработка, где hi = 0, lo = hi >> delta
+	uint16_t precision_delta = exp_a - exp_b;
+
+	printf("Precision delta: %d\n", precision_delta);
+
+	// Будем корректировать точность b во временных переменных
+	uint64_t temp_hi = src_b->hi & 0x0000FFFFFFFFFFFF; // Отпилить знак/экспоненту -- они уже были сохранены выше
+	uint64_t temp_lo = src_b->lo;
+
+
+	//printf("HI: 0x%016I64x\n", temp_hi);
+	//printf("LO: 0x%016I64x\n", temp_lo);
+
+
+	// Принудительно выставить бит, который обозначается экспонентой
+	temp_hi |= 0x0001000000000000;
+
+	// Биты, которые мигрируют из hi в lo
+	uint64_t migrated = temp_hi & RHS_MASK(precision_delta);
+
+	// Сдвинуть LO
+	temp_lo >>= precision_delta;
+
+	// Вставить мигрировавшие биты
+	temp_lo |= (migrated << (64 - precision_delta));
+
+	// Сдвинуть HI
+	temp_hi >>= precision_delta;
+
+
+	//printf("HI: 0x%016I64x\n", temp_hi);
+	//printf("LO: 0x%016I64x\n", temp_lo);
+	
+
+	// Добавить всю это чертовщину в src_a
+	src_a->hi += temp_hi;
+	src_a->lo += temp_lo;
+
+	// Проверить переполнение
+	// Если переполнилось, то сдвинуть мантиссу вправо
+	// Есть ли какой-нибудь более лаконичный способ двигать число, размазанное по двум переменным?
+	if (float128_get_exp(src_a) > exp_a) {
+		src_a->lo >>= 1;
+		src_a->lo |= (src_a->hi << 63);
+
+		uint64_t stay = src_a->hi & 0xFFFF000000000000;
+		uint64_t move = src_a->hi & 0x0000FFFFFFFFFFFF;
+
+		src_a->hi = stay | (move >> 1);
+	}
+}
+
+// Напечатать Float128
+// Хорошая производительность для чисел >1.0
+// Ужасная производительность для чисел <1.0
 void print_float128(float128_t* src) {
-	printf("Result: ");
+	print("Result: ");
 
 	if (float_128_get_sign(src))
-		printf("-");
+		print("-");
 
 	uint64_t exp = float128_get_exp(src);
 
@@ -59,6 +144,12 @@ void print_float128(float128_t* src) {
 	if (high_bit >= 0) {
 
 		// Подвести вес разряда к рабочему диапазону
+		// Начать с единицы
+		// 1 + 1 = 2
+		// 2 + 2 = 4
+		// 4 + 4 = 8
+		// 8 + 8 = 16
+		// И т.д.
 		av_t base = av_from_string("1");
 
 		for (int i = 0; i < high_bit - 112; i++)
@@ -99,7 +190,7 @@ void print_float128(float128_t* src) {
 
 		print_av(&num);
 	} else {
-		printf("0");
+		print("0");
 	}
 
 	//
@@ -158,9 +249,11 @@ void print_float128(float128_t* src) {
 			num.lsc--;
 		}
 
-		printf(".");
+		print(".");
 		print_av(&num);
 	}
+	
+	print("\n");
 }
 
 int main() {
@@ -172,7 +265,31 @@ int main() {
 	//float128_t a = {0x400F000000000000, 0x0000000000000000}; // 2^16							OK
 	//float128_t a = {0x400F000300000000, 0x0000000000000000}; // 2^16 + 3						OK
 
-	float128_t a = {0x400F000380000000, 0x0000000000000000}; // 2^16 + 3.5						OK
+	//float128_t a = {0x400F000380000000, 0x0000000000000000}; // 2^16 + 3.5						OK
+	
+	// float128_t a = {0x0000111111111111, 0x1111111111111111}; // Что-то мелкое						OK
+	
+	
+	// WORKS
+	//float128_t a = {0x3FFE400000000000, 0x0000000000000000}; // 0.625
+	//float128_t b = {0x3FFE400000000000, 0x0000000000000000}; // 0.625
+	
+	// WORKS
+	//float128_t a = {0x400F000380000000, 0x0000000000000000}; // 2^16 + 3.5
+	//float128_t b = {0x3FFE400000000000, 0x0000000000000000}; // 0.625
+	
+	// WORKS
+	// float128_t a = {0x400F000380000000, 0x0000000000000000}; // 65539.5
+	// float128_t b = {0x400A000380000000, 0x0000000000000000}; // 2048.109375
+
+	// WORKS
+	float128_t a = {0x4031678123456789, 0x0000000000000000}; // 1581117267615268.0
+	float128_t b = {0x4001234567891234, 0x0000000000000000}; // 4.551111110...
+
+	print_float128(&a);
+	print_float128(&b);
+
+	float128_add(&a, &b);
 
 	print_float128(&a);
 }
