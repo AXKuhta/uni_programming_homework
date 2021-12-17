@@ -134,13 +134,7 @@ void print_float128(float128_t* src) {
 			mantissa_size = 112;
 
 
-		uint64_t slice = 0;
-
-		if (mantissa_size > 64) {
-			slice = src->lo;
-		} else {
-			slice = src->hi >> (48 - mantissa_size);
-		}
+		uint64_t slice = src->lo;
 
 		for (int i = 0; i < mantissa_size; i++) {
 			// Если собираемся просмотреть 65-й бит, то пора переключить кусок
