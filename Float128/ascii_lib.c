@@ -1,9 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <string.h>
-#include <time.h>
+#include <stdlib.h> // malloc() и free()
+#include <stdint.h> // size_t
+#include <unistd.h> // write()
 
 //
 // Количество цифр в разных числах:
