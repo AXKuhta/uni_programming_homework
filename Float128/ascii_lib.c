@@ -20,6 +20,10 @@
 //
 
 struct ascii_vec {
+	// Неизменный указатель на выделенную память
+	void* memory;
+
+	// Изменяемые указатели для просмотра числа
 	char* lsc; // Least significant char
 	char* msc; // Most significant char
 };
@@ -34,6 +38,7 @@ av_t av_new(size_t size) {
 	for (size_t i = 0; i < size; i++)
 		memory[i] = '0';
 
+	av.memory = memory;
 	av.msc = memory;
 	av.lsc = memory + size - 1;
 
@@ -140,11 +145,27 @@ av_t ascii_add(av_t* a, av_t* b) {
 	}
 
 	// Скрыть ведущий ноль
-	// Без realloc() это испортит указатель
-	// Его больше нельзя будет освободить через free()
-	// Наиболее разумным решением будет хранить оригинальный указатель отдельно
 	if (*result.msc == '0')
 		result.msc++;
+
+	return result;
+}
+
+// Обёртка, которая автоматически высвободит память
+av_t ascii_add_autofree(av_t* a, av_t* b) {
+	av_t result = ascii_add(a, b);
+
+	if (a->memory == b->memory) {
+		free(a->memory);
+
+		a->memory = NULL;
+	} else {
+		free(a->memory);
+		free(b->memory);
+
+		a->memory = NULL;
+		b->memory = NULL;
+	}
 
 	return result;
 }
