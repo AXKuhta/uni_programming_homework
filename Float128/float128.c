@@ -65,14 +65,13 @@ void float128_add(float128_t* src_a, float128_t* src_b) {
 		exit(-1);
 	}
 
-	// Проблема: битовые операции сломаются, если precision_delta > 64
-	// На такой случай нужна альтернативная обработка, где hi = 0, lo = hi >> delta
+	// Разница в точности 
 	uint16_t precision_delta = exp_a - exp_b;
 
 	//printf("\nPrecision delta: %d\n", precision_delta);
 
-	// Будем корректировать точность b во временных переменных
-	uint64_t temp_hi = src_b->hi & 0x0000FFFFFFFFFFFF; // Отпилить знак/экспоненту -- они уже были сохранены выше
+	// Будем корректировать точность во временных переменных
+	uint64_t temp_hi = src_b->hi & 0x0000FFFFFFFFFFFF;
 	uint64_t temp_lo = src_b->lo;
 
 
@@ -83,24 +82,18 @@ void float128_add(float128_t* src_a, float128_t* src_b) {
 	// Принудительно выставить бит, который обозначается экспонентой
 	temp_hi |= 0x0001000000000000;
 
-	// Если допустимо, то сдвинуть HI и LO
-	// Иначе обнулить
-	// Оказывается сдвиг на 64 и больше попросту не работает -- ничего не сдвигается вообще
-	if (precision_delta < 64) {
-		// Биты, которые мигрируют из hi в lo
+
+	if (precision_delta < 64) { 			/* Корректировка точности при разнице меньше чем 64 бита */
 		uint64_t migrated = temp_hi & RHS_MASK(precision_delta);
 
 		temp_hi >>= precision_delta;
 		temp_lo >>= precision_delta;
 
-		// Вставить мигрировавшие биты
 		temp_lo |= (migrated << (64 - precision_delta));
-	} else if (precision_delta < 112) {
-
-		// Эта операция эквивалентна сдвигу на 64 и более
+	} else if (precision_delta < 112) { 	/* Корректировка точности при разнице 64..111 бит*/
 		temp_lo = (temp_hi >> (precision_delta - 64));
 		temp_hi = 0;
-	} else {
+	} else { 								/* При разнице >=112 бит, меньшее число просто исчезает */
 		temp_hi = 0;
 		temp_lo = 0;
 	}
@@ -123,7 +116,6 @@ void float128_add(float128_t* src_a, float128_t* src_b) {
 
 	// Проверить переполнение экспоненты
 	// Если переполнилось, то сдвинуть мантиссу вправо
-	// Есть ли какой-нибудь более лаконичный способ двигать число, размазанное по двум переменным?
 	if (float128_get_exp(src_a) > exp_a) {
 		src_a->lo >>= 1;
 		src_a->lo |= (src_a->hi << 63);
