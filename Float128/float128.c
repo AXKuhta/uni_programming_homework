@@ -44,8 +44,9 @@ uint16_t float128_get_exp(float128_t* src) {
 // Постфикс ull на нуле критически важен
 // ~ это инвертирование
 //
-// Начальный вариант: ((1ull << x) - 1)
-// Не хотел работать при x = 64
+// Багованные варианты:
+// ((1ull << x) - 1)		Не будет работать при x = 64
+// (~0ull >> (64 - x))		Не будет работать при x = 0
 //
 // Вернёт:
 // 0        0000
@@ -53,7 +54,7 @@ uint16_t float128_get_exp(float128_t* src) {
 // 2        0011
 // 3        0111
 // И т.д. до 64
-#define RHS_MASK(x) (~0ull >> (64 - x))
+#define RHS_MASK(x) (x > 0 ? (~0ull >> (64 - x)) : 0)
 
 // Сложить два Float128
 // a = a + b
@@ -70,7 +71,7 @@ void float128_add(float128_t* src_a, float128_t* src_b) {
 	// На такой случай нужна альтернативная обработка, где hi = 0, lo = hi >> delta
 	uint16_t precision_delta = exp_a - exp_b;
 
-	// printf("Precision delta: %d\n", precision_delta);
+	//printf("\nPrecision delta: %d\n", precision_delta);
 
 	// Будем корректировать точность b во временных переменных
 	uint64_t temp_hi = src_b->hi & 0x0000FFFFFFFFFFFF; // Отпилить знак/экспоненту -- они уже были сохранены выше
@@ -96,7 +97,7 @@ void float128_add(float128_t* src_a, float128_t* src_b) {
 	// Сдвинуть HI
 	temp_hi >>= precision_delta;
 
-
+	//printf("MASK: 0x%016I64x\n", RHS_MASK(precision_delta));
 	//printf("HI: 0x%016I64x\n", temp_hi);
 	//printf("LO: 0x%016I64x\n", temp_lo);
 
