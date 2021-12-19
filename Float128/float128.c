@@ -173,7 +173,7 @@ void print_float128(float128_t* src) {
 			roi = high_bit - 48;
 			slice = src->lo >> (64 - roi);
 		} else {
-			slice = src->hi;
+			slice = src->hi >> (48 - high_bit);
 		}
 
 		for (int i = 0; i < high_bit; i++) {
