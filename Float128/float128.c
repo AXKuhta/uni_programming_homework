@@ -86,14 +86,26 @@ void float128_add(float128_t* src_a, float128_t* src_b) {
 	// Биты, которые мигрируют из hi в lo
 	uint64_t migrated = temp_hi & RHS_MASK(precision_delta);
 
-	// Сдвинуть LO
-	temp_lo >>= precision_delta;
+	// Если допустимо, то сдвинуть HI и LO
+	// Иначе обнулить
+	// Оказывается сдвиг на 64 и больше попросту не работает -- ничего не сдвигается вообще
+	if (precision_delta < 64) {
+		temp_hi >>= precision_delta;
+		temp_lo >>= precision_delta;
 
-	// Вставить мигрировавшие биты
-	temp_lo |= (migrated << (64 - precision_delta));
+		// Вставить мигрировавшие биты
+		temp_lo |= (migrated << (64 - precision_delta));
+	} else if (precision_delta < 112) {
+		temp_hi = 0;
+		temp_lo = 0;
 
-	// Сдвинуть HI
-	temp_hi >>= precision_delta;
+		// Вставить мигрировавшие биты
+		temp_lo |= (migrated >> (precision_delta - 64));
+	} else {
+		print("Not OK\n");
+		exit(-1);
+	}
+
 
 	//printf("MASK: 0x%016I64x\n", RHS_MASK(precision_delta));
 	//printf("HI: 0x%016I64x\n", temp_hi);
