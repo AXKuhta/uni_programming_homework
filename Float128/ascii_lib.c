@@ -1,6 +1,15 @@
 #include <stdlib.h> // malloc() и free()
 #include <stdint.h> // size_t
-#include <unistd.h> // write()
+#include <string.h> // strlen()
+
+#ifdef _MSC_VER
+    #include <io.h> // write()
+
+    #define read _read
+    #define write _write
+#else
+    #include <unistd.h> // write()
+#endif
 
 //
 // Количество цифр в разных числах:
@@ -34,7 +43,7 @@ typedef struct ascii_vec av_t;
 av_t av_new(size_t size) {
 	av_t av;
 
-	char* memory = malloc(size);
+	char* memory = (char*)malloc(size);
 
 	for (size_t i = 0; i < size; i++)
 		memory[i] = '0';
@@ -47,11 +56,11 @@ av_t av_new(size_t size) {
 }
 
 // Перевести ASCII-строку в av_t число
-av_t av_from_string(char* str) {
+av_t av_from_string(const char* str) {
 	av_t av;
 
-	av.msc = str;
-	av.lsc = str + strlen(str) - 1;
+	av.msc = (char*)str;
+	av.lsc = (char*)str + strlen(str) - 1;
 	
 	// Крайне вероятно, что str - статичная память
 	// Её нельзя высвобождать через free()
