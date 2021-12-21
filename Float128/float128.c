@@ -50,8 +50,9 @@ uint16_t float128_get_exp(float128_t* src) {
 // При 64 работать не будет, вернёт 0
 #define RHS_MASK(x) ((1ull << x) - 1)
 
-// Сложить два Float128
-// a = a + b
+// Добавить к большему Float128 меньшее Float128
+// Изменяет src_a, не изменяет src_b
+// Иными словами: a = a + b
 void float128_add(float128_t* src_a, float128_t* src_b) {
 	uint16_t exp_a = float128_get_exp(src_a);
 	uint16_t exp_b = float128_get_exp(src_b);
