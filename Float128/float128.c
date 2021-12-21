@@ -15,7 +15,6 @@
 // Экспонента	15 бит
 // Мантисса 	112 бит
 //
-
 struct float128_s {
 	uint64_t hi;
 	uint64_t lo;
@@ -39,6 +38,7 @@ int float_128_get_sign(float128_t* src) {
 uint16_t float128_get_exp(float128_t* src) {
 	return ((src->hi >> 48) & 0x7FFF);
 }
+
 
 // Right Hand Side Mask; Маска по правой стороне
 // Вернёт:
@@ -123,6 +123,7 @@ void float128_add(float128_t* src_a, float128_t* src_b) {
 		src_a->hi = stay | (move >> 1);
 	}
 }
+
 
 // Напечатать Float128
 // Хорошая производительность для чисел >1.0
@@ -257,6 +258,7 @@ void print_float128(float128_t* src) {
 	}
 }
 
+
 void addition_test(float128_t a, float128_t b, float128_t r) {
 	print_float128(&a);
 	print(" + ")
@@ -273,7 +275,6 @@ void addition_test(float128_t a, float128_t b, float128_t r) {
 		exit(-1);
 	}
 }
-
 
 void addition_1() {
 	print(__func__);
@@ -353,6 +354,7 @@ void addition_7() {
 	float128_t r = {0x402F000000000000, 0x8000000000000000}; // 281474976710656.5
 	addition_test(a, b, r);
 }
+
 
 int main() {
 	addition_1();
